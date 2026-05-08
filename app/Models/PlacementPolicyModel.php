@@ -1,0 +1,1 @@
+<?php namespace App\Models; use CodeIgniter\Model; class PlacementPolicyModel extends Model { protected $table = 'placement_policies'; protected $allowedFields = ['title', 'content', 'display_order', 'is_active']; }

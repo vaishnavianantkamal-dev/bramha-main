@@ -1,0 +1,1 @@
+<?php namespace App\Models; use CodeIgniter\Model; class NavigationModel extends Model { protected $table = 'navigation_menu'; protected $allowedFields = ['label', 'path', 'parent_id', 'display_order', 'is_active']; }

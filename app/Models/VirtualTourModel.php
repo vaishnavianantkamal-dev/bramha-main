@@ -1,0 +1,1 @@
+<?php namespace App\Models; use CodeIgniter\Model; class VirtualTourModel extends Model { protected $table = 'virtual_tours'; protected $allowedFields = ['title', 'embed_url', 'thumbnail', 'display_order', 'is_active']; }

@@ -18,7 +18,7 @@
 // Base URL for all API endpoints
 // Uses environment variable from .env.local
 // Fallback to localhost for development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/brahmavalley-main/brahmavalley-main/backend/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // API Timeout (in milliseconds)
 const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 30000;
@@ -36,7 +36,7 @@ if (import.meta.env.DEV) {
 
 /**
  * Generic fetch function with error handling and timeout
- * @param {string} endpoint - API endpoint (e.g., 'hero-slides.php')
+ * @param {string} endpoint - API endpoint (e.g., 'hero-slides')
  * @param {object} options - Fetch options (method, headers, body, etc.)
  * @returns {Promise} - Resolves with data or rejects with error
  */
@@ -101,7 +101,7 @@ const apiFetch = async (endpoint, options = {}) => {
  */
 export const fetchHeroSlides = async () => {
   try {
-    const response = await apiFetch('hero-slides.php');
+    const response = await apiFetch('hero-slides');
     return response.data; // Return the slides array
   } catch (error) {
     console.error('Error fetching hero slides:', error);
@@ -120,7 +120,7 @@ export const fetchHeroSlides = async () => {
  */
 export const submitContactForm = async (formData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/contact.php`, {
+    const response = await fetch(`${API_BASE_URL}/contact`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ export const fetchCourses = async (filters = {}) => {
     });
     
     const queryString = queryParams.toString();
-    const endpoint = queryString ? `courses.php?${queryString}` : 'courses.php';
+    const endpoint = queryString ? `courses?${queryString}` : 'courses';
     
     const response = await apiFetch(endpoint);
     return response.data;
@@ -183,7 +183,7 @@ export const fetchCourses = async (filters = {}) => {
 export const fetchGalleryImages = async (category) => {
   try {
     console.log(`🔄 fetchGalleryImages called for category: ${category}`);
-    const endpoint = category ? `gallery-images.php?category=${category}` : 'gallery-images.php';
+    const endpoint = category ? `gallery/images?category=${category}` : 'gallery/images';
     console.log(`🌐 API URL will be: ${API_BASE_URL}/${endpoint}`);
     
     const response = await apiFetch(endpoint);
@@ -206,9 +206,9 @@ export const fetchGalleryImages = async (category) => {
 export const fetchGalleryCategories = async () => {
   try {
     console.log('🔄 fetchGalleryCategories called');
-    console.log(`🌐 API URL will be: ${API_BASE_URL}/gallery-categories.php`);
+    console.log(`🌐 API URL will be: ${API_BASE_URL}/gallery-categories`);
     
-    const response = await apiFetch('gallery-categories.php');
+    const response = await apiFetch('gallery/categories');
     
     console.log('📦 Gallery categories response:', response);
     console.log('📊 Categories data:', response.data);
@@ -231,7 +231,7 @@ export const fetchGalleryCategories = async () => {
  */
 export const fetchBoardMembers = async () => {
   try {
-    const response = await apiFetch('board-members.php');
+    const response = await apiFetch('board-members');
     return response.data;
   } catch (error) {
     console.error('Error fetching board members:', error);
@@ -249,7 +249,7 @@ export const fetchBoardMembers = async () => {
  */
 export const fetchPlacementRecords = async () => {
   try {
-    const response = await apiFetch('placement-records.php');
+    const response = await apiFetch('placement/records');
     return response.data;
   } catch (error) {
     console.error('Error fetching placement records:', error);
@@ -263,7 +263,7 @@ export const fetchPlacementRecords = async () => {
  */
 export const fetchRecruiters = async () => {
   try {
-    const response = await apiFetch('recruiters.php');
+    const response = await apiFetch('placement/recruiters');
     return response.data;
   } catch (error) {
     console.error('Error fetching recruiters:', error);
@@ -277,7 +277,7 @@ export const fetchRecruiters = async () => {
  */
 export const fetchPlacementFAQs = async () => {
   try {
-    const response = await apiFetch('placement-faqs.php');
+    const response = await apiFetch('placement/faqs');
     return response.data;
   } catch (error) {
     console.error('Error fetching placement FAQs:', error);
@@ -295,7 +295,7 @@ export const fetchPlacementFAQs = async () => {
  */
 export const fetchBlogPosts = async () => {
   try {
-    const response = await apiFetch('blogs.php');
+    const response = await apiFetch('blogs');
     return response.data;
   } catch (error) {
     console.error('Error fetching blog posts:', error);
@@ -315,7 +315,7 @@ export const fetchBlogPost = async (identifier) => {
     // Determine if identifier is ID (number) or slug (string)
     const isId = !isNaN(identifier) && !isNaN(parseFloat(identifier));
     const queryParam = isId ? `id=${identifier}` : `slug=${identifier}`;
-    const endpoint = `blogs.php?${queryParam}`;
+    const endpoint = `blogs?${queryParam}`;
     
     console.log('🌐 Blog details API URL will be:', `${API_BASE_URL}/${endpoint}`);
     
@@ -339,9 +339,9 @@ export const fetchBlogPost = async (identifier) => {
 export const fetchBlogDetails = async (id) => {
   try {
     console.log('🔄 fetchBlogDetails called with ID:', id);
-    console.log('🌐 Blog details API URL will be:', `${API_BASE_URL}/blog-details.php?id=${id}`);
+    console.log('🌐 Blog details API URL will be:', `${API_BASE_URL}/blog-details?id=${id}`);
     
-    const response = await apiFetch(`blog-details.php?id=${id}`);
+    const response = await apiFetch(`blog-details?id=${id}`);
     
     console.log('📦 Blog details response:', response);
     console.log('📊 Blog data:', response.data);
@@ -363,7 +363,7 @@ export const fetchBlogDetails = async (id) => {
  */
 export const fetchStatistics = async () => {
   try {
-    const response = await apiFetch('statistics.php');
+    const response = await apiFetch('statistics');
     return response.data;
   } catch (error) {
     console.error('Error fetching statistics:', error);
@@ -382,9 +382,9 @@ export const fetchStatistics = async () => {
 export const fetchAwards = async () => {
   try {
     console.log('🔄 fetchAwards called');
-    console.log('🌐 API URL will be:', `${API_BASE_URL}/awards.php`);
+    console.log('🌐 API URL will be:', `${API_BASE_URL}/awards`);
     
-    const response = await apiFetch('awards.php');
+    const response = await apiFetch('awards');
     
     console.log('📦 apiFetch response:', response);
     console.log('📊 Response data field:', response.data);
@@ -407,7 +407,7 @@ export const fetchAwards = async () => {
  */
 export const fetchAffiliations = async () => {
   try {
-    const response = await apiFetch('affiliations.php');
+    const response = await apiFetch('affiliations');
     return response.data;
   } catch (error) {
     console.error('Error fetching affiliations:', error);
@@ -426,9 +426,9 @@ export const fetchAffiliations = async () => {
 export const fetchInfrastructure = async () => {
   try {
     console.log('🔄 fetchInfrastructure called');
-    console.log('🌐 API URL will be:', `${API_BASE_URL}/infrastructure.php`);
+    console.log('🌐 API URL will be:', `${API_BASE_URL}/infrastructure`);
     
-    const response = await apiFetch('infrastructure.php');
+    const response = await apiFetch('infrastructure');
     
     console.log('📦 Infrastructure response:', response);
     console.log('📊 Infrastructure data:', response.data);
@@ -453,9 +453,9 @@ export const fetchInfrastructure = async () => {
 export const fetchFacilityDetails = async (slug) => {
   try {
     console.log('🔄 fetchFacilityDetails called for slug:', slug);
-    console.log('🌐 API URL will be:', `${API_BASE_URL}/facility-details.php?slug=${slug}`);
+    console.log('🌐 API URL will be:', `${API_BASE_URL}/facility-details?slug=${slug}`);
     
-    const response = await apiFetch(`facility-details.php?slug=${slug}`);
+    const response = await apiFetch(`facilities/${slug}`);
     
     console.log('📦 Facility details response:', response);
     console.log('📊 Facility data:', response.data);
@@ -478,9 +478,9 @@ export const fetchFacilityDetails = async (slug) => {
 export const fetchCommitments = async () => {
   try {
     console.log('🔄 fetchCommitments called');
-    console.log('🌐 API URL will be:', `${API_BASE_URL}/commitments.php`);
+    console.log('🌐 API URL will be:', `${API_BASE_URL}/commitments`);
     
-    const response = await apiFetch('commitments.php');
+    const response = await apiFetch('commitments');
     
     console.log('📦 Commitments response:', response);
     console.log('📊 Commitments data:', response.data);
@@ -504,9 +504,9 @@ export const fetchCommitments = async () => {
 export const fetchTopHeaderLinks = async () => {
   try {
     console.log('🔄 fetchTopHeaderLinks called');
-    console.log('🌐 API URL will be:', `${API_BASE_URL}/top-header.php`);
+    console.log('🌐 API URL will be:', `${API_BASE_URL}/top-header`);
     
-    const response = await apiFetch('top-header.php');
+    const response = await apiFetch('top-header');
     
     console.log('📦 Top header links response:', response);
     console.log('📊 Links data:', response.data);
@@ -529,7 +529,7 @@ export const fetchTopHeaderLinks = async () => {
 export const fetchAboutSection = async () => {
   try {
     console.log('🔄 fetchAboutSection called');
-    const response = await apiFetch('about.php');
+    const response = await apiFetch('about');
     console.log('✅ About section loaded:', response.data.title);
     return response.data;
   } catch (error) {
@@ -548,7 +548,7 @@ export const fetchAboutSection = async () => {
 export const fetchWhyChooseUs = async () => {
   try {
     console.log('🔄 fetchWhyChooseUs called');
-    const response = await apiFetch('why-choose-us.php');
+    const response = await apiFetch('why-choose-us');
     console.log('✅ Why choose us loaded:', response.data.length, 'cards');
     return response.data;
   } catch (error) {
@@ -567,7 +567,7 @@ export const fetchWhyChooseUs = async () => {
 export const fetchProgressHighlights = async () => {
   try {
     console.log('🔄 fetchProgressHighlights called');
-    const response = await apiFetch('progress-highlights.php');
+    const response = await apiFetch('progress-highlights');
     console.log('✅ Progress highlights loaded:', response.data.length, 'items');
     return response.data;
   } catch (error) {
@@ -587,7 +587,7 @@ export const fetchProgressHighlights = async () => {
 export const fetchJourneyMessage = async (slug = 'president-message') => {
   try {
     console.log('🔄 fetchJourneyMessage called with slug:', slug);
-    const response = await apiFetch(`journey-message.php?slug=${slug}`);
+    const response = await apiFetch(`leadership/${slug}`);
     console.log('✅ Journey message loaded:', response.data.name);
     return response.data;
   } catch (error) {
@@ -606,7 +606,7 @@ export const fetchJourneyMessage = async (slug = 'president-message') => {
 export const fetchPlacementPolicy = async () => {
   try {
     console.log('🔄 fetchPlacementPolicy called');
-    const response = await apiFetch('placement-policy.php');
+    const response = await apiFetch('placement-policy');
     console.log('✅ Placement policy loaded:', response.data.length, 'sections');
     return response.data;
   } catch (error) {
@@ -625,7 +625,7 @@ export const fetchPlacementPolicy = async () => {
 export const fetchNavigationMenu = async () => {
   try {
     console.log('🔄 fetchNavigationMenu called');
-    const response = await apiFetch('navigation.php');
+    const response = await apiFetch('navigation');
     console.log('✅ Navigation menu loaded:', response.data.length, 'main items');
     return response.data;
   } catch (error) {
@@ -644,7 +644,7 @@ export const fetchNavigationMenu = async () => {
 export const fetchFooterSections = async () => {
   try {
     console.log('🔄 fetchFooterSections called');
-    const response = await apiFetch('footer.php');
+    const response = await apiFetch('footer');
     console.log('✅ Footer sections loaded:', response.data.length, 'sections');
     return response.data;
   } catch (error) {
@@ -663,7 +663,7 @@ export const fetchFooterSections = async () => {
 export const fetchVirtualTours = async () => {
   try {
     console.log('🔄 fetchVirtualTours called');
-    const response = await apiFetch('virtual-tour.php');
+    const response = await apiFetch('virtual-tour');
     console.log('✅ Virtual tours loaded:', response.data.length, 'tours');
     return response.data;
   } catch (error) {

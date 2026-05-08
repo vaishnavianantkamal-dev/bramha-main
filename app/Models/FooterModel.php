@@ -1,0 +1,1 @@
+<?php namespace App\Models; use CodeIgniter\Model; class FooterModel extends Model { protected $table = 'footer_sections'; protected $allowedFields = ['title', 'links_json', 'display_order', 'is_active']; }

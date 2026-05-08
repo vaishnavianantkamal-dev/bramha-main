@@ -1,0 +1,1 @@
+<?php namespace App\Models; use CodeIgniter\Model; class ProgressHighlightModel extends Model { protected $table = 'progress_highlights'; protected $allowedFields = ['label', 'value', 'suffix', 'icon', 'display_order', 'is_active']; }

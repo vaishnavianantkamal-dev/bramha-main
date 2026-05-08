@@ -25,3 +25,14 @@ dist.zip
 *.sw?
 
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# CodeIgniter 4
+/writable/*
+!/writable/.gitkeep
+/vendor/
+/public/uploads/*
+!/public/uploads/.gitkeep

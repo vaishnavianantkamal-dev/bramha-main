@@ -1,0 +1,1 @@
+<?php namespace App\Models; use CodeIgniter\Model; class WhyChooseUsModel extends Model { protected $table = 'why_choose_us'; protected $allowedFields = ['title', 'content', 'icon', 'display_order', 'is_active']; }

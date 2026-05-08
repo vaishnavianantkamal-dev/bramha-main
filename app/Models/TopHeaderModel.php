@@ -1,0 +1,1 @@
+<?php namespace App\Models; use CodeIgniter\Model; class TopHeaderModel extends Model { protected $table = 'top_header_links'; protected $allowedFields = ['label', 'path', 'icon', 'type', 'display_order', 'is_active']; }

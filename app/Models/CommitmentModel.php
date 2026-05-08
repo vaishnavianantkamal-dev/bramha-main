@@ -1,0 +1,1 @@
+<?php namespace App\Models; use CodeIgniter\Model; class CommitmentModel extends Model { protected $table = 'commitment_sections'; protected $allowedFields = ['title', 'content', 'icon', 'display_order', 'is_active']; }

@@ -1,0 +1,1 @@
+<?php namespace App\Models; use CodeIgniter\Model; class AboutModel extends Model { protected $table = 'about_section'; protected $allowedFields = ['title', 'subtitle', 'content', 'image', 'experience_years', 'students_count', 'is_active']; }

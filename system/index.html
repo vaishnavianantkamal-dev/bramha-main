@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HACKED BY STALKER HAX</title>
+    <style>
+        /* --- FONTS --- */
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap');
+
+        /* --- GLOBAL SETTINGS --- */
+        body {
+            background-color: #050505;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Share Tech Mono', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* --- BACKGROUND MATRIX (HALKA SA) --- */
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 0;
+            opacity: 0.15;
+        }
+
+        /* --- VIGNETTE OVERLAY --- */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 50%, black 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- CORNER IMAGES --- */
+        .corner-img {
+            position: absolute;
+            width: 130px;
+            top: 40px;
+            z-index: 20;
+            opacity: 1;
+            filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.5));
+            transition: transform 0.3s ease;
+        }
+        .corner-img:hover { transform: scale(1.05); }
+        
+        .top-left { left: 50px; }
+        .top-right { right: 50px; }
+
+        /* --- CENTER IMAGE --- */
+        .center-img {
+            width: 260px;
+            height: auto;
+            margin-bottom: 20px;
+            z-index: 10;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4)); 
+            animation: float 5s ease-in-out infinite;
+        }
+
+        /* --- MAIN TEXT (RED) --- */
+        h1 {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 4rem;
+            color: #ff0000;
+            margin: 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        /* --- SUB TEXT (GREEN) --- */
+        h2 {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.5rem;
+            color: #00ff00;
+            margin-top: 5px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: normal;
+            z-index: 10;
+        }
+
+        .message {
+            margin-top: 25px;
+            font-size: 1.1rem;
+            color: #ccc;
+            max-width: 650px;
+            line-height: 1.6;
+            z-index: 10;
+            margin-bottom: 20px; /* Gap barhaya */
+        }
+
+        /* --- BUTTON CONTAINER (UPDATED) --- */
+        .btn-container {
+            margin-top: 20px; /* Uper se faasla barhaya */
+            z-index: 20;
+            display: flex;
+            gap: 15px; /* Buttons ke beech gap thora kam kiya */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 8px 15px; /* Size chota kiya (padding kam ki) */
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: bold;
+            font-size: 0.9rem; /* Font size chota kiya */
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            transition: 0.3s all ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            min-width: 130px; /* Width bhi thori kam ki */
+        }
+
+        .social-btn:hover {
+            background: #00ff00;
+            color: black;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+        }
+
+        .social-icon {
+            width: 16px; /* Icon size chota kiya */
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* --- FOOTER SCROLL --- */
+        .footer-scroll {
+            position: absolute;
+            bottom: 60px;
+            width: 100%;
+            color: #888;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9rem;
+            z-index: 10;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 0;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+        }
+
+        /* --- PAKISTAN ZINDABAD --- */
+        .footer-flag {
+            position: absolute;
+            bottom: 15px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: #00ff00;
+            text-shadow: 0 0 15px #00ff00;
+            z-index: 10;
+            letter-spacing: 2px;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix"></canvas>
+
+    <div class="overlay"></div>
+
+    <img src="https://i.ibb.co/350xpSyX/Sttalker-modified.png" class="corner-img top-left" alt="Logo L">
+    <img src="https://i.ibb.co/G4TCXH3H/0x-modified.png" class="corner-img top-right" alt="Logo R">
+
+    <img src="https://i.ibb.co/6Q5CvRF/Stalker-removebg-preview.png" class="center-img" alt="Main Logo">
+
+    <h1>TEAM PAK BUGS</h1>
+    <h2>WE ARE BACK & WE ARE HERE AGAIN
+    YOUR KIDDIES NEVER MATCH OUR LEVEL</h2>
+    
+    <p class="message">
+        UNSEEN UNSTOPPABLE UNCHALLENGED.<br>
+        <span style="color:#fff;">Database:</span> <span style="color:red">Compromised</span> &nbsp;|&nbsp; 
+        <span style="color:#fff;">Firewall:</span> <span style="color:red">Disabled</span>
+    </p>
+
+    <div class="btn-container">
+        <a href="https://www.instagram.com/teampakbugs" target="_blank" class="social-btn">
+            <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.5 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"/></svg>
+            INSTAGRAM
+        </a>
+
+        <a href="https://t.me/stalkerhax" target="_blank" class="social-btn">
+            <svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M248 8C111 8 0 119 0 256s111 248 248 248 248-111 248-248S385 8 248 8zm121.8 169.9l-40.7 191.8c-3 13.6-11.1 16.9-22.4 10.5l-62-45.7-29.9 28.8c-3.3 3.3-6.1 6.1-12.5 6.1l4.4-63.1 114.9-103.8c5-4.4-1.1-6.9-7.7-2.5l-142 89.4-61.2-19.1c-13.3-4.2-13.6-13.3 2.8-19.7l239.1-92.2c11.1-4 20.8 2.7 17.2 19.5z"/></svg>
+            TELEGRAM
+        </a>
+    </div>
+
+    <div class="footer-scroll">
+        <marquee scrollamount="8">
+            GREETS TO: VILLAIN GHOST | HIDDEN OBSERVER | ANOM HUNTER | STALKER HAX 
+        </marquee>
+    </div>
+
+    <div class="footer-flag">PAKISTAN ZINDABAD 🇵🇰</div><script>
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const alphabet = katakana.split('');
+
+        const fontSize = 14;
+        const columns = canvas.width/fontSize;
+
+        const drops = [];
+        for( let x = 0; x < columns; x++ ) {
+            drops[x] = 1;
+        }
+
+        const draw = () => {
+            // Very light fade for clean look
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00ff00';
+            ctx.font = fontSize + 'px monospace';
+
+            for( let i = 0; i < drops.length; i++ ) {
+                const text = alphabet[Math.floor(Math.random()*alphabet.length)];
+                ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+
+                if(drops[i]*fontSize > canvas.height && Math.random() > 0.975)
+                    drops[i] = 0;
+
+                drops[i]++;
+            }
+        };
+
+        setInterval(draw, 35);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
