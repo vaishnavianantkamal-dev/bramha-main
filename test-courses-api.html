@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Courses API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffe6e6; border: 1px solid #ff9999; }
+        .success { background: #e6ffe6; border: 1px solid #99ff99; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <h1>Courses API Test</h1>
+    
+    <button onclick="testAPI()">Test Courses API</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'http://localhost/brahmavalley-main/brahmavalley-main/backend/api/courses.php';
+        
+        async function testAPI() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                addResult('🔄 Testing API: ' + API_URL, 'info');
+                
+                const response = await fetch(API_URL);
+                
+                addResult('📡 Response Status: ' + response.status, response.ok ? 'success' : 'error');
+                addResult('📡 Response OK: ' + response.ok, response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                addResult('📦 Raw JSON Response:', 'info');
+                addResult(JSON.stringify(data, null, 2), 'success');
+                
+                if (data.success) {
+                    addResult('✅ API Success: ' + data.message, 'success');
+                    addResult('📊 Courses Count: ' + (data.data ? data.data.length : 0), 'success');
+                    
+                    if (data.data && data.data.length > 0) {
+                        addResult('🔍 First Course Sample:', 'info');
+                        addResult(JSON.stringify(data.data[0], null, 2), 'success');
+                    }
+                } else {
+                    addResult('❌ API Error: ' + data.message, 'error');
+                }
+                
+            } catch (error) {
+                addResult('❌ Fetch Error: ' + error.message, 'error');
+                console.error('Full error:', error);
+            }
+        }
+        
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'result ' + type;
+            
+            if (typeof message === 'string' && (message.startsWith('{') || message.startsWith('['))) {
+                const pre = document.createElement('pre');
+                pre.textContent = message;
+                div.appendChild(pre);
+            } else {
+                div.textContent = message;
+            }
+            
+            resultsDiv.appendChild(div);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

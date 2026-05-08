@@ -1,7 +1,9 @@
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
+import { fetchBoardMembers } from "../../services/api.js";
 
-const boardMembers = [
+// Fallback data in case API fails
+const fallbackBoardMembers = [
     {
         id: 1,
         name: "Mr. Rajaram. D. Pangavhane",
@@ -62,7 +64,7 @@ function MemberCard({ member, index }) {
             {/* Photo */}
             <div className="relative h-80 bg-gray-100">
                 <img
-                    src={member.image}
+                    src={member.image_path || member.image}
                     alt={member.name}
                     className="w-full h-full object-contain bg-white rounded-2xl"
                     onError={(e) => {
@@ -82,7 +84,7 @@ function MemberCard({ member, index }) {
             {/* Info */}
             <div className="p-6 text-center">
                 <h3 className="text-gray-900 font-bold text-lg mb-2">{member.name}</h3>
-                <p className="text-gray-600 text-sm font-medium">{member.role}</p>
+                <p className="text-gray-600 text-sm font-medium">{member.position || member.role}</p>
             </div>
         </motion.div>
     );
@@ -91,6 +93,31 @@ function MemberCard({ member, index }) {
 export default function BoardOfTrusties() {
     const headerRef = useRef(null);
     const isHeaderInView = useInView(headerRef, { once: true });
+    const [boardMembers, setBoardMembers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Load board members from API
+    useEffect(() => {
+        const loadBoardMembers = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const data = await fetchBoardMembers();
+                setBoardMembers(data);
+                console.log('✅ Board members loaded from database:', data.length, 'members');
+            } catch (err) {
+                console.error('❌ Failed to load board members:', err);
+                setError(err.message);
+                // Use fallback data
+                setBoardMembers(fallbackBoardMembers);
+                console.log('🔄 Using fallback board members data');
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadBoardMembers();
+    }, []);
 
     return (
         <section className="py-20 bg-gray-50">
@@ -121,11 +148,33 @@ export default function BoardOfTrusties() {
                 </motion.div>
 
                 {/* Board Members Grid - 3 per row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {boardMembers.map((member, i) => (
-                        <MemberCard key={member.id} member={member} index={i} />
-                    ))}
-                </div>
+                {loading ? (
+                    // Loading skeleton
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                                <div className="h-80 bg-gray-200 animate-pulse" />
+                                <div className="p-6 text-center">
+                                    <div className="h-5 bg-gray-200 rounded animate-pulse mb-2" />
+                                    <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3 mx-auto" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : boardMembers.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500 text-lg">No board members found</p>
+                        {error && (
+                            <p className="text-red-500 text-sm mt-2">Error: {error}</p>
+                        )}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {boardMembers.map((member, i) => (
+                            <MemberCard key={member.id} member={member} index={i} />
+                        ))}
+                    </div>
+                )}
             </div>
         </section>
     );

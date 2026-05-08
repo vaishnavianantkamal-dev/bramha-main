@@ -1,10 +1,10 @@
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
+import { fetchAwards } from "../../services/api.js";
 
-const awardsData = [
-  // Empty by default per client requirement � add real data here when available
-  // Example structure:
-  // { id: 1, award: "Best Engineering College", name: "Brahma Valley", year: "2024", category: "Education", organization: "AICTE" },
+// Fallback data in case API fails
+const fallbackAwardsData = [
+  { id: 1, award: "Best Engineering College", name: "Brahma Valley", year: "2024", category: "Education", organization: "AICTE" },
 ];
 
 function DataTable({ columns, data, emptyMessage }) {
@@ -35,7 +35,7 @@ function DataTable({ columns, data, emptyMessage }) {
               >
                 {columns.map((col) => (
                   <td key={col.key} className="px-5 py-3.5 text-gray-600 whitespace-nowrap">
-                    {col.key === "#" ? i + 1 : row[col.key] ?? "�"}
+                    {col.key === "#" ? i + 1 : (row[col.key] || "—")}
                   </td>
                 ))}
               </motion.tr>
@@ -63,6 +63,38 @@ function DataTable({ columns, data, emptyMessage }) {
 export default function Awards() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
+  const [awardsData, setAwardsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Load awards from API
+  useEffect(() => {
+    const loadAwards = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await fetchAwards();
+        
+        if (Array.isArray(data)) {
+          setAwardsData(data);
+          console.log('✅ Awards loaded successfully:', data.length, 'awards');
+        } else {
+          console.error('❌ API response is not an array:', data);
+          setAwardsData(fallbackAwardsData);
+        }
+      } catch (err) {
+        console.error('❌ Failed to load awards:', err.message);
+        setError(err.message);
+        // Use fallback data
+        setAwardsData(fallbackAwardsData);
+        console.log('🔄 Using fallback awards data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAwards();
+  }, []);
 
   const columns = [
     { key: "#", label: "#" },
@@ -97,6 +129,25 @@ export default function Awards() {
           </p>
         </motion.div>
 
+        {/* Debug Info - Remove after fixing */}
+        {false && process.env.NODE_ENV === 'development' && (
+          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h3 className="font-semibold text-yellow-800 mb-2">Debug Info:</h3>
+            <p className="text-sm text-yellow-700">Loading: {loading ? 'Yes' : 'No'}</p>
+            <p className="text-sm text-yellow-700">Error: {error || 'None'}</p>
+            <p className="text-sm text-yellow-700">Awards Data Length: {awardsData.length}</p>
+            <p className="text-sm text-yellow-700">API URL: http://localhost/brahmavalley-main/brahmavalley-main/backend/api/awards.php</p>
+            {awardsData.length > 0 && (
+              <details className="mt-2">
+                <summary className="text-sm text-yellow-700 cursor-pointer">Sample Award Data</summary>
+                <pre className="text-xs text-yellow-600 mt-1 overflow-auto">
+                  {JSON.stringify(awardsData[0], null, 2)}
+                </pre>
+              </details>
+            )}
+          </div>
+        )}
+
         <motion.div
           className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
           initial={{ opacity: 0, y: 15 }}
@@ -123,11 +174,26 @@ export default function Awards() {
           </div>
 
           <div className="p-0">
-            <DataTable
-              columns={columns}
-              data={awardsData}
-              emptyMessage="No awards found"
-            />
+            {loading ? (
+              // Loading skeleton
+              <div className="p-5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0">
+                    <div className="w-8 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="flex-1 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="w-16 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="w-20 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="w-24 h-4 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <DataTable
+                columns={columns}
+                data={awardsData}
+                emptyMessage={error ? `Error: ${error}` : "No awards found"}
+              />
+            )}
           </div>
         </motion.div>
 

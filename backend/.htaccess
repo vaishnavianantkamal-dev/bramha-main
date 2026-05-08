@@ -1,0 +1,23 @@
+# Backend .htaccess
+# IMPORTANT: display_errors must be OFF so PHP errors don't corrupt JSON output
+php_flag display_errors off
+php_flag log_errors on
+php_value error_reporting 32767
+
+# Set default charset
+AddDefaultCharset UTF-8
+
+# Allow CORS via PHP headers (not Apache headers, to avoid duplicates)
+# The PHP files set their own CORS headers
+
+# Protect sensitive files
+<FilesMatch "^\.(env|git|htpasswd)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect config directory
+<FilesMatch "\.(php)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>

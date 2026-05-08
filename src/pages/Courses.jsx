@@ -1,78 +1,80 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
-
-// ── Mock Data (replace with API later) ──
-const coursesData = [
-    // { id: 1, name: "B.E. Computer Engineering", level: "UG", duration: "4 Years", campus: "Main Campus", institution: "Brahma Valley College of Engineering & Research Institute" },
-    // { id: 2, name: "B.E. Mechanical Engineering", level: "UG", duration: "4 Years", campus: "Main Campus", institution: "Brahma Valley College of Engineering & Research Institute" },
-    // { id: 3, name: "B.E. Civil Engineering", level: "UG", duration: "4 Years", campus: "Main Campus", institution: "Brahma Valley College of Engineering & Research Institute" },
-    // { id: 4, name: "B.E. Electronics & Telecom", level: "UG", duration: "4 Years", campus: "Main Campus", institution: "Brahma Valley College of Engineering & Research Institute" },
-    // { id: 5, name: "M.E. Computer Engineering", level: "PG", duration: "2 Years", campus: "Main Campus", institution: "Brahma Valley College of Engineering & Research Institute" },
-    // { id: 6, name: "MBA", level: "PG", duration: "2 Years", campus: "Main Campus", institution: "Brahma Valley Institute of Management" },
-    // { id: 7, name: "BBA", level: "UG", duration: "3 Years", campus: "Main Campus", institution: "Brahma Valley Institute of Management" },
-    // { id: 8, name: "B.Pharm", level: "UG", duration: "4 Years", campus: "Main Campus", institution: "Brahma Valley College of Pharmacy" },
-    // { id: 9, name: "M.Pharm", level: "PG", duration: "2 Years", campus: "Main Campus", institution: "Brahma Valley Institute of Pharmacy" },
-    // { id: 10, name: "D.Pharm", level: "Diploma", duration: "2 Years", campus: "Main Campus", institution: "Brahma Valley College of Pharmacy" },
-    // { id: 11, name: "B.Ed", level: "UG", duration: "2 Years", campus: "Main Campus", institution: "Brahma Valley College of Education" },
-    // { id: 12, name: "D.Ed", level: "Diploma", duration: "2 Years", campus: "Main Campus", institution: "Brahma Valley College of Education" },
-    // { id: 13, name: "Diploma in Computer Engineering", level: "Diploma", duration: "3 Years", campus: "Polytechnic Campus", institution: "Brahma Valley College of Technical Education" },
-    // { id: 14, name: "Diploma in Mechanical Engineering", level: "Diploma", duration: "3 Years", campus: "Polytechnic Campus", institution: "Brahma Valley College of Technical Education" },
-    // { id: 15, name: "B.A.", level: "UG", duration: "3 Years", campus: "Main Campus", institution: "Brahma Valley College of Arts, Science & Commerce" },
-    // { id: 16, name: "B.Com", level: "UG", duration: "3 Years", campus: "Main Campus", institution: "Brahma Valley College of Arts, Science & Commerce" },
-    // { id: 17, name: "B.Sc. Computer Science", level: "UG", duration: "3 Years", campus: "Main Campus", institution: "Brahma Valley College of Arts, Science & Commerce" },
-    // { id: 18, name: "Primary & Secondary School (1st–10th)", level: "School", duration: "10 Years", campus: "School Campus", institution: "Brahma Valley English Medium School" },
-    // { id: 19, name: "HSC – Science Stream (11th–12th)", level: "Junior College", duration: "2 Years", campus: "School Campus", institution: "Brahma Valley Residential Public School & Junior College" },
-];
-
-const filterTabs = [
-    {
-        id: "level",
-        label: "Course Level",
-        icon: (
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
-            </svg>
-        ),
-        options: ["All", ...Array.from(new Set(coursesData.map((c) => c.level)))],
-    },
-    {
-        id: "duration",
-        label: "Duration",
-        icon: (
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        ),
-        options: ["All", ...Array.from(new Set(coursesData.map((c) => c.duration))).sort()],
-    },
-    {
-        id: "campus",
-        label: "Campus",
-        icon: (
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-        ),
-        options: ["All", ...Array.from(new Set(coursesData.map((c) => c.campus)))],
-    },
-    {
-        id: "institution",
-        label: "Institution",
-        icon: (
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-        ),
-        options: ["All", ...Array.from(new Set(coursesData.map((c) => c.institution)))],
-    },
-];
+import { fetchCourses } from "../services/api.js";
 
 export default function CoursesPage() {
+    const [coursesData, setCoursesData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState("level");
     const [filters, setFilters] = useState({ level: "All", duration: "All", campus: "All", institution: "All" });
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+    // Fetch courses from API
+    useEffect(() => {
+        const loadCourses = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const data = await fetchCourses();
+                setCoursesData(data);
+                console.log('✅ Courses loaded from database:', data.length, 'courses');
+            } catch (err) {
+                console.error('❌ Failed to load courses:', err);
+                setError(err.message);
+                setCoursesData([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadCourses();
+    }, []);
+
+    // Build filter options dynamically from loaded data
+    const filterTabs = useMemo(() => [
+        {
+            id: "level",
+            label: "Course Level",
+            icon: (
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
+                </svg>
+            ),
+            options: ["All", ...Array.from(new Set(coursesData.map((c) => c.level)))],
+        },
+        {
+            id: "duration",
+            label: "Duration",
+            icon: (
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            ),
+            options: ["All", ...Array.from(new Set(coursesData.map((c) => c.duration))).sort()],
+        },
+        {
+            id: "campus",
+            label: "Campus",
+            icon: (
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            ),
+            options: ["All", ...Array.from(new Set(coursesData.map((c) => c.campus)))],
+        },
+        {
+            id: "institution",
+            label: "Institution",
+            icon: (
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+            ),
+            options: ["All", ...Array.from(new Set(coursesData.map((c) => c.institution)))],
+        },
+    ], [coursesData]);
 
     const currentTab = filterTabs.find((t) => t.id === activeTab);
     const setFilter = (key, val) => setFilters((p) => ({ ...p, [key]: val }));

@@ -1,6 +1,19 @@
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import facilitiesData, { facilitiesBySlug } from "../data/facilitiesData";
+import { useEffect, useState } from "react";
+import { fetchFacilityDetails } from "../services/api.js";
+
+// Static navigation data (this stays static for navigation)
+const facilitiesNavData = [
+  { slug: "academic-instructions", navLabel: "Academic Instructions" },
+  { slug: "sports-facilities", navLabel: "Sports Facilities" },
+  { slug: "medical-facilities", navLabel: "Medical Facilities" },
+  { slug: "transport-facilities", navLabel: "Transport Facilities" },
+  { slug: "hostel-facilities", navLabel: "Hostel Facilities" },
+];
+
+// No fallback data - we want real data from database only
+// If API fails, show error message instead of placeholder content
 
 function FacilityNav({ activeSlug }) {
   return (
@@ -10,7 +23,7 @@ function FacilityNav({ activeSlug }) {
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Facilities</p>
         </div>
         <div className="p-2">
-          {facilitiesData.map((item) => {
+          {facilitiesNavData.map((item) => {
             const active = item.slug === activeSlug;
             return (
               <Link
@@ -49,8 +62,14 @@ function FacilityPoint({ text, index }) {
   );
 }
 
-function FacilityHero({ facility }) {
-  if (facility.image) {
+function FacilityHero({ facility, loading }) {
+  if (loading) {
+    return (
+      <div className="rounded-2xl bg-gray-200 animate-pulse h-[240px] md:h-[360px]"></div>
+    );
+  }
+
+  if (facility.hero_image) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
@@ -59,18 +78,34 @@ function FacilityHero({ facility }) {
         className="relative overflow-hidden rounded-2xl"
       >
         <img
-          src={facility.image}
+          src={facility.hero_image}
           alt={facility.title}
           className="h-[240px] w-full object-cover md:h-[360px]"
+          onError={(e) => {
+            console.log(`⚠️ Hero image failed to load: ${facility.hero_image}`);
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
+          onLoad={() => {
+            console.log(`✅ Hero image loaded: ${facility.hero_image}`);
+          }}
         />
         <div className="absolute inset-0 bg-linear-to-t from-slate-900/55 via-slate-900/15 to-transparent" />
         <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center justify-between gap-3">
           <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800">
-            {facility.kicker}
+            {facility.subtitle || "Campus Services"}
           </span>
           <span className="rounded-full bg-cyan-500/90 px-3 py-1 text-xs font-semibold text-white">
             Campus Support
           </span>
+        </div>
+        {/* Fallback placeholder (hidden by default) */}
+        <div className="absolute inset-0 bg-linear-to-br from-cyan-50 to-white p-8 hidden items-center justify-center">
+          <div className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">{facility.subtitle}</p>
+            <h3 className="mt-2 text-2xl font-bold text-slate-900">{facility.title}</h3>
+            <p className="mt-3 max-w-xl text-sm text-slate-600">Image will be updated for this section.</p>
+          </div>
         </div>
       </motion.div>
     );
@@ -84,7 +119,7 @@ function FacilityHero({ facility }) {
       className="rounded-2xl border border-dashed border-cyan-200 bg-linear-to-br from-cyan-50 to-white p-8"
     >
       <div className="flex min-h-[220px] flex-col items-center justify-center text-center md:min-h-[300px]">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">{facility.kicker}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">{facility.subtitle}</p>
         <h3 className="mt-2 text-2xl font-bold text-slate-900">{facility.title}</h3>
         <p className="mt-3 max-w-xl text-sm text-slate-600">Image will be updated for this section.</p>
       </div>
@@ -93,10 +128,48 @@ function FacilityHero({ facility }) {
 }
 
 export default function Facilities() {
-  const { slug = facilitiesData[0].slug } = useParams();
-  const facility = facilitiesBySlug[slug];
+  const { slug = facilitiesNavData[0].slug } = useParams();
+  const [facility, setFacility] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!facility) {
+  // Load facility details from API
+  useEffect(() => {
+    const loadFacilityDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('🔄 Loading facility details for slug:', slug);
+        console.log('🌐 API URL:', `http://localhost/brahmavalley-main/brahmavalley-main/backend/api/facility-details.php?slug=${slug}`);
+        
+        const data = await fetchFacilityDetails(slug);
+        
+        if (data) {
+          setFacility(data);
+          console.log('✅ Facility details loaded successfully:', data.title);
+          console.log('📊 Facility data:', data);
+          console.log('📏 Points count:', data.points?.length || 0);
+        } else {
+          throw new Error('No data returned from API');
+        }
+      } catch (err) {
+        console.error('❌ Failed to load facility details:', err.message);
+        console.error('🔍 Error details:', err);
+        setError(err.message);
+        setFacility(null); // Don't use fallback data - show error instead
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFacilityDetails();
+  }, [slug]);
+
+  // Check if slug exists in navigation
+  const validSlug = facilitiesNavData.some(item => item.slug === slug);
+  
+  if (!validSlug && !loading) {
     return (
       <section className="bg-slate-50 py-16">
         <div className="mx-auto max-w-6xl px-6 md:px-12">
@@ -120,32 +193,72 @@ export default function Facilities() {
           className="mb-8"
         >
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Campus Services</p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-900 md:text-5xl">{facility.title}</h1>
-          <p className="mt-3 max-w-2xl text-sm text-slate-600 md:text-base">{facility.kicker}</p>
+          {loading ? (
+            <div className="mt-2 space-y-3">
+              <div className="h-12 bg-gray-200 rounded animate-pulse w-96"></div>
+              <div className="h-6 bg-gray-200 rounded animate-pulse w-2/3"></div>
+            </div>
+          ) : (
+            <>
+              <h1 className="mt-2 text-3xl font-bold text-slate-900 md:text-5xl">{facility?.title}</h1>
+              <p className="mt-3 max-w-2xl text-sm text-slate-600 md:text-base">{facility?.subtitle}</p>
+            </>
+          )}
         </motion.div>
 
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <FacilityNav activeSlug={slug} />
 
           <article className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_20px_60px_rgba(2,6,23,0.08)] md:p-6">
-            <FacilityHero facility={facility} />
+            <FacilityHero facility={facility || {}} loading={loading} />
 
             <div className="mt-6 grid gap-6">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Overview</h2>
-                <p className="mt-3 text-base leading-relaxed text-slate-700">{facility.description}</p>
+                {loading ? (
+                  <div className="mt-3 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-4/6"></div>
+                  </div>
+                ) : error ? (
+                  <p className="mt-3 text-base text-red-600">
+                    Unable to load overview: {error}
+                  </p>
+                ) : (
+                  <p className="mt-3 text-base leading-relaxed text-slate-700">
+                    {facility?.overview}
+                  </p>
+                )}
               </div>
-              {/* <div className="rounded-2xl border border-cyan-100 bg-cyan-50/60 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-700">Quick Snapshot</p>
-                <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                  <li>Total Key Services: {facility.points.length}</li>
-                  <li>Coverage: Students and Staff</li>
-                  <li>Support Type: On-Campus and Linked Services</li>
-                </ul>
-              </div> */}
             </div>
 
-            {facility.points.length > 0 ? (
+            {loading ? (
+              // Loading skeleton for points
+              <div className="mt-6 grid gap-3 md:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="h-6 w-6 bg-gray-200 rounded-full animate-pulse"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-3 bg-gray-200 rounded animate-pulse w-4/5"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              // Show error message - no fallback content
+              <div className="mt-6 rounded-2xl border border-red-300 bg-red-50 p-6 text-center">
+                <p className="text-sm font-semibold text-red-700">
+                  ❌ Error loading facility details: {error}
+                </p>
+                <p className="mt-2 text-xs text-red-600">
+                  Please check the browser console for more details or try refreshing the page.
+                </p>
+              </div>
+            ) : facility?.points && facility.points.length > 0 ? (
               <ul className="mt-6 grid gap-3 md:grid-cols-2">
                 {facility.points.map((point, index) => (
                   <FacilityPoint key={`${facility.slug}-${index}`} text={point} index={index} />
@@ -153,11 +266,25 @@ export default function Facilities() {
               </ul>
             ) : (
               <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-                <p className="text-sm font-semibold text-slate-700">Detailed points will be published soon.</p>
+                <p className="text-sm font-semibold text-slate-700">
+                  No facility details available
+                </p>
               </div>
             )}
           </article>
         </div>
+
+        {/* Debug info for development */}
+        {process.env.NODE_ENV === 'development' && !loading && (
+          <div className="mt-8 p-4 bg-gray-50 rounded-lg text-xs text-gray-600">
+            <p><strong>Debug Info:</strong></p>
+            <p>Facility Slug: {slug}</p>
+            <p>Facility Title: {facility?.title}</p>
+            <p>Data Source: {error ? 'Fallback' : 'Database'}</p>
+            <p>API Status: {error ? `Error: ${error}` : 'Success'}</p>
+            <p>Points Count: {facility?.points?.length || 0}</p>
+          </div>
+        )}
       </div>
     </section>
   );

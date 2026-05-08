@@ -71,7 +71,7 @@ export const journeyLeaders = [
     name: "Dr. Gokul S. Talele",
     designation: "Brahma Valley Educational Campus",
     organization: "Nashik Gramin Shikshan Prasarak Mandal",
-    image: "/fallback-image.jpg",
+    image: "/images/about/campus-director.png",
     paragraphs: [
       "It gives me immense pleasure to welcome you to Brahma Valley Group of Institutions, Anjaneri, Nashik. Our campus has been established with the vision of providing quality education, holistic development, and opportunities that prepare our students to face the challenges of a rapidly changing world.",
       "As Campus Director, my mission is to foster an environment where students are inspired to learn, empowered to explore, and encouraged to grow as responsible global citizens. I warmly invite you to become a part of the Brahma Valley family and join us in our journey of excellence.",

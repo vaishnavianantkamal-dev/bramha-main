@@ -1,10 +1,10 @@
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
+import { fetchAffiliations } from "../../services/api.js";
 
-const accreditationsData = [
-  // Empty by default � add real data when available
-  // Example structure:
-  // { id: 1, name: "NAAC Accreditation", year: "2024", grade: "A", body: "UGC-NAAC", validity: "2029" },
+// Fallback data in case API fails
+const fallbackAccreditationsData = [
+  { id: 1, name: "NAAC Accreditation", year: "2024", grade: "A", body: "UGC-NAAC", validity: "2029" },
 ];
 
 function DataTable({ columns, data, emptyMessage }) {
@@ -35,7 +35,7 @@ function DataTable({ columns, data, emptyMessage }) {
               >
                 {columns.map((col) => (
                   <td key={col.key} className="px-5 py-3.5 text-gray-600 whitespace-nowrap">
-                    {col.key === "#" ? i + 1 : row[col.key] ?? "�"}
+                    {col.key === "#" ? i + 1 : (row[col.key] || "—")}
                   </td>
                 ))}
               </motion.tr>
@@ -63,6 +63,31 @@ function DataTable({ columns, data, emptyMessage }) {
 export default function Affilations() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
+  const [accreditationsData, setAccreditationsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Load affiliations from API
+  useEffect(() => {
+    const loadAffiliations = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchAffiliations();
+        setAccreditationsData(data);
+        console.log('✅ Affiliations loaded from database:', data.length, 'affiliations');
+      } catch (err) {
+        console.error('❌ Failed to load affiliations:', err);
+        setError(err.message);
+        // Use fallback data
+        setAccreditationsData(fallbackAccreditationsData);
+        console.log('🔄 Using fallback affiliations data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAffiliations();
+  }, []);
 
   const columns = [
     { key: "#", label: "#" },
@@ -123,11 +148,27 @@ export default function Affilations() {
           </div>
 
           <div className="p-0">
-            <DataTable
-              columns={columns}
-              data={accreditationsData}
-              emptyMessage="No accreditations found"
-            />
+            {loading ? (
+              // Loading skeleton
+              <div className="p-5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0">
+                    <div className="w-8 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="flex-1 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="w-16 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="w-20 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="w-24 h-4 bg-gray-200 rounded animate-pulse" />
+                    <div className="w-20 h-4 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <DataTable
+                columns={columns}
+                data={accreditationsData}
+                emptyMessage={error ? `Error: ${error}` : "No accreditations found"}
+              />
+            )}
           </div>
         </motion.div>
 

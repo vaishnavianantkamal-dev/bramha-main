@@ -1,28 +1,54 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, useEffect, useState, Suspense } from "react";
+import { Toaster } from "react-hot-toast";
 import SchoolBrand from "./components/common/Schoolbrand";
 import TopHeader from "./components/common/TopHeader";
-import Home from "./pages/Home/Home";
-import Overview from "./pages/AboutUs/Overview";
-import BoardOfTrusties from "./pages/AboutUs/BoardOfTrusties";
-import Affilations from "./pages/AboutUs/Affilations";
-import Awards from "./pages/AboutUs/Awards";
-import ProgressHighlight from "./pages/AboutUs/ProgressHighlight";
-import Journey from "./components/Journey";
-import Facilities from "./components/Facilities";
 import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
-import Courses from "./pages/Courses";
-import Events from "./pages/Events";
-import PlacementOverview from "./pages/Placement/Overview";
-import PlacementRecord from "./pages/Placement/PlacementRecord";
-import OurRecruiters from "./pages/Placement/OurRecruiters";
-import PlacementPolicy from "./pages/Placement/PlacementPolicy";
-import FAQ from "./pages/Placement/FAQ";
-import Infrastructure from "./pages/Infrastructure";
-import OurCommitment from "./pages/OurCommitment";
-import { useEffect, useState } from "react";
 import ScrollToTop from "./components/ScrollToTop";
+import { AuthProvider } from "./admin/context/AuthContext";
+import ProtectedRoute from "./admin/components/ProtectedRoute";
+import AdminLayout from "./admin/components/AdminLayout";
+
+// Admin pages (lazy loaded)
+const AdminLogin      = lazy(() => import("./admin/pages/Login"));
+const AdminDashboard  = lazy(() => import("./admin/pages/Dashboard"));
+const AdminHeroSlides = lazy(() => import("./admin/pages/HeroSlides"));
+const AdminBlogs      = lazy(() => import("./admin/pages/Blogs"));
+const AdminCourses    = lazy(() => import("./admin/pages/Courses"));
+const AdminGallery    = lazy(() => import("./admin/pages/Gallery"));
+const AdminRecruiters = lazy(() => import("./admin/pages/Recruiters"));
+const AdminContacts   = lazy(() => import("./admin/pages/Contacts"));
+const AdminSettings   = lazy(() => import("./admin/pages/Settings"));
+
+// Lazy load all page components
+const Home = lazy(() => import("./pages/Home/Home"));
+const Overview = lazy(() => import("./pages/AboutUs/Overview"));
+const BoardOfTrusties = lazy(() => import("./pages/AboutUs/BoardOfTrusties"));
+const Affilations = lazy(() => import("./pages/AboutUs/Affilations"));
+const Awards = lazy(() => import("./pages/AboutUs/Awards"));
+const ProgressHighlight = lazy(() => import("./pages/AboutUs/ProgressHighlight"));
+const Journey = lazy(() => import("./components/Journey"));
+const Facilities = lazy(() => import("./components/Facilities"));
+const Courses = lazy(() => import("./pages/Courses"));
+const Events = lazy(() => import("./pages/Events"));
+const PlacementOverview = lazy(() => import("./pages/Placement/Overview"));
+const PlacementRecord = lazy(() => import("./pages/Placement/PlacementRecord"));
+const OurRecruiters = lazy(() => import("./pages/Placement/OurRecruiters"));
+const PlacementPolicy = lazy(() => import("./pages/Placement/PlacementPolicy"));
+const FAQ = lazy(() => import("./pages/Placement/FAQ"));
+const Infrastructure = lazy(() => import("./pages/Infrastructure"));
+const OurCommitment = lazy(() => import("./pages/OurCommitment"));
+const BlogDetails = lazy(() => import("./pages/BlogDetails"));
+const Diagnostic = lazy(() => import("./pages/Diagnostic"));
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+  </div>
+);
 
 function App() {
   const [showBlockNotice, setShowBlockNotice] = useState(false);
@@ -147,39 +173,61 @@ function App() {
   }, []);
   return (
     <>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <BrowserRouter>
-        <ScrollToTop />
-        <div className="min-h-screen flex flex-col">
-          <TopHeader />
-          {/* <SchoolBrand /> */}
-          <Header />
-          <main className="grow">
+        <AuthProvider>
+          <ScrollToTop />
+          <Suspense fallback={<LoadingSpinner />}>
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/overview" element={<Overview />} />
-              <Route path="/board-of-trustees" element={<BoardOfTrusties />} />
-              <Route path="/affiliations" element={<Affilations />} />
-              <Route path="/awards" element={<Awards />} />
-              <Route path="/progress" element={<ProgressHighlight />} />
-              <Route path="/journey" element={<Navigate to="/journey/president" replace />} />
-              <Route path="/journey/:slug" element={<Journey />} />
-              <Route path="/facilities" element={<Navigate to="/facilities/medical-facilities" replace />} />
-              <Route path="/facilities/:slug" element={<Facilities />} />
-              <Route path="/courses" element={<Courses />} />
-              <Route path="/infrastructure" element={<Infrastructure />} />
-              <Route path="/our-commitment" element={<OurCommitment />} />
-              <Route path="/placement" element={<PlacementOverview />} />
-              <Route path="/life-at-bv" element={<Navigate to="/life-at-bv/brahmautsav" replace />} />
-              <Route path="/life-at-bv/:slug" element={<Events />} />
-              <Route path="/placement/overview" element={<PlacementOverview />} />
-              <Route path="/placement/placement-record" element={<PlacementRecord />} />
-              <Route path="/placement/our-recruiters" element={<OurRecruiters />} />
-              <Route path="/placement/placement-policy" element={<PlacementPolicy />} />
-              <Route path="/placement/faq" element={<FAQ />} />
+              {/* ── Admin Routes ─────────────────────────────── */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<ProtectedRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/hero" element={<ProtectedRoute><AdminLayout><AdminHeroSlides /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/blogs" element={<ProtectedRoute><AdminLayout><AdminBlogs /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/courses" element={<ProtectedRoute><AdminLayout><AdminCourses /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/gallery" element={<ProtectedRoute><AdminLayout><AdminGallery /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/recruiters" element={<ProtectedRoute><AdminLayout><AdminRecruiters /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/contacts" element={<ProtectedRoute><AdminLayout><AdminContacts /></AdminLayout></ProtectedRoute>} />
+              <Route path="/admin/settings" element={<ProtectedRoute><AdminLayout><AdminSettings /></AdminLayout></ProtectedRoute>} />
+
+              {/* ── Public Website Routes ─────────────────────── */}
+              <Route path="/*" element={
+                <div className="min-h-screen flex flex-col">
+                  <TopHeader />
+                  <Header />
+                  <main className="grow">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/diagnostic" element={<Diagnostic />} />
+                      <Route path="/overview" element={<Overview />} />
+                      <Route path="/board-of-trustees" element={<BoardOfTrusties />} />
+                      <Route path="/affiliations" element={<Affilations />} />
+                      <Route path="/awards" element={<Awards />} />
+                      <Route path="/progress" element={<ProgressHighlight />} />
+                      <Route path="/journey" element={<Navigate to="/journey/president" replace />} />
+                      <Route path="/journey/:slug" element={<Journey />} />
+                      <Route path="/facilities" element={<Navigate to="/facilities/medical-facilities" replace />} />
+                      <Route path="/facilities/:slug" element={<Facilities />} />
+                      <Route path="/courses" element={<Courses />} />
+                      <Route path="/infrastructure" element={<Infrastructure />} />
+                      <Route path="/our-commitment" element={<OurCommitment />} />
+                      <Route path="/blog/:id" element={<BlogDetails />} />
+                      <Route path="/placement" element={<PlacementOverview />} />
+                      <Route path="/life-at-bv" element={<Navigate to="/life-at-bv/brahmautsav" replace />} />
+                      <Route path="/life-at-bv/:slug" element={<Events />} />
+                      <Route path="/placement/overview" element={<PlacementOverview />} />
+                      <Route path="/placement/placement-record" element={<PlacementRecord />} />
+                      <Route path="/placement/our-recruiters" element={<OurRecruiters />} />
+                      <Route path="/placement/placement-policy" element={<PlacementPolicy />} />
+                      <Route path="/placement/faq" element={<FAQ />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </div>
+              } />
             </Routes>
-          </main>
-          <Footer />
-        </div>
+          </Suspense>
+        </AuthProvider>
       </BrowserRouter>
 
       {import.meta.env.PROD &&

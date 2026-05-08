@@ -5,32 +5,37 @@ import {
   useTransform,
   AnimatePresence,
 } from "framer-motion";
+import { fetchHeroSlides, fetchStatistics } from "../../../services/api.js";
 
-const slides = [
+// ============================================
+// Fallback Data (Used if API fails)
+// ============================================
+const fallbackSlides = [
   {
     image: "/images/hero-1.png",
     tag: "World-Class Faculty",
     headline: "Learn from the",
     highlight: "Best Minds",
-    sub: "200+ expert faculty dedicated to your academic journey.",
+    subtitle: "200+ expert faculty dedicated to your academic journey.",
   },
   {
     image: "/images/hero-2.jpg",
     tag: "Est. 1998",
     headline: "Shaping Tomorrow's",
     highlight: "Leaders",
-    sub: "Where knowledge meets ambition — a campus built for the bold.",
+    subtitle: "Where knowledge meets ambition — a campus built for the bold.",
   },
   {
     image: "/images/hero-3.webp",
     tag: "50+ Programs",
     headline: "Discover Your",
     highlight: "Passion",
-    sub: "Engineering, Management, Pharmacy & more under one valley.",
+    subtitle: "Engineering, Management, Pharmacy & more under one valley.",
   },
 ];
 
-const stats = [
+// Fallback statistics data
+const fallbackStats = [
   { value: "25+", label: "Years of Excellence" },
   { value: "15K+", label: "Alumni Worldwide" },
   { value: "50+", label: "Programs Offered" },
@@ -38,14 +43,88 @@ const stats = [
 ];
 
 export default function Hero() {
+  // ============================================
+  // State Management
+  // ============================================
+  const [slides, setSlides] = useState(fallbackSlides); // Start with fallback
+  const [stats, setStats] = useState(fallbackStats); // Start with fallback
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [current, setCurrent] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  
   const containerRef = useRef(null);
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 600], [0, 180]);
   const opacity = useTransform(scrollY, [0, 400], [1, 0]);
 
+  // ============================================
+  // Fetch Hero Slides and Statistics from API
+  // ============================================
   useEffect(() => {
+    const loadHeroData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('🔄 Starting to load hero data...');
+        
+        // Fetch slides
+        try {
+          const slidesData = await fetchHeroSlides();
+          if (slidesData && slidesData.length > 0) {
+            setSlides(slidesData);
+            console.log('✅ Hero slides loaded from database:', slidesData.length, 'slides');
+          } else {
+            console.warn('⚠️ No slides in database, using fallback data');
+            setSlides(fallbackSlides);
+          }
+        } catch (slideErr) {
+          console.warn('⚠️ Failed to load slides, using fallback:', slideErr.message);
+          setSlides(fallbackSlides);
+        }
+
+        // Fetch statistics
+        try {
+          const statsData = await fetchStatistics();
+          if (statsData && statsData.length > 0) {
+            // Transform API data to match component structure
+            const transformedStats = statsData.map(stat => ({
+              value: stat.stat_value || stat.value,
+              label: stat.stat_label || stat.label
+            }));
+            setStats(transformedStats);
+            console.log('✅ Statistics loaded from database:', statsData.length, 'stats');
+          } else {
+            console.warn('⚠️ No statistics in database, using fallback data');
+            setStats(fallbackStats);
+          }
+        } catch (statsErr) {
+          console.warn('⚠️ Failed to load statistics, using fallback:', statsErr.message);
+          setStats(fallbackStats);
+        }
+      } catch (err) {
+        // API failed, use fallback data
+        console.error('❌ Failed to load hero data from API:', err);
+        setError(err.message);
+        setSlides(fallbackSlides);
+        setStats(fallbackStats);
+        console.log('🔄 Using fallback data due to API error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHeroData();
+  }, []); // Run once on component mount
+
+  // ============================================
+  // Auto-slide Timer
+  // ============================================
+  useEffect(() => {
+    // Don't start timer if no slides
+    if (slides.length === 0) return;
+
     const timer = setInterval(() => {
       setIsAnimating(true);
       setTimeout(() => {
@@ -53,9 +132,13 @@ export default function Hero() {
         setIsAnimating(false);
       }, 600);
     }, 5500);
+    
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]); // Re-run when slides change
 
+  // ============================================
+  // Manual Slide Navigation
+  // ============================================
   const goTo = (i) => {
     if (i === current) return;
     setIsAnimating(true);
@@ -65,6 +148,42 @@ export default function Hero() {
     }, 400);
   };
 
+  // ============================================
+  // Loading State
+  // ============================================
+  if (loading && slides.length === 0) {
+    return (
+      <section className="relative w-full min-h-screen overflow-hidden bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/60 text-sm">Loading hero slides...</p>
+        </div>
+      </section>
+    );
+  }
+
+  // ============================================
+  // Error State (Still shows fallback slides)
+  // ============================================
+  if (error && slides.length === 0) {
+    return (
+      <section className="relative w-full min-h-screen overflow-hidden bg-black flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <p className="text-white font-semibold mb-2">Unable to load hero slides</p>
+          <p className="text-white/60 text-sm">{error}</p>
+        </div>
+      </section>
+    );
+  }
+
+  // ============================================
+  // Main Hero Component
+  // ============================================
   return (
     <section
       ref={containerRef}
@@ -198,7 +317,7 @@ export default function Hero() {
                 {slides[current].highlight}
               </h1>
               <p className="font-body text-white/60 text-lg md:text-xl max-w-xl leading-relaxed">
-                {slides[current].sub}
+                {slides[current].subtitle || slides[current].sub}
               </p>
             </motion.div>
           </AnimatePresence>
@@ -281,7 +400,7 @@ export default function Hero() {
       </div>
 
       {/* === Stats Bar === */}
-      {/* <motion.div
+      <motion.div
         className="absolute bottom-0 left-0 right-0 z-30"
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -307,7 +426,7 @@ export default function Hero() {
             ))}
           </div>
         </div>
-      </motion.div> */}
+      </motion.div>
 
       {/* Scroll hint */}
       <motion.div

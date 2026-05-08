@@ -1,10 +1,12 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
+import { fetchGalleryCategories, fetchGalleryImages } from "../../../services/api.js";
 
-const categories = ["Brahmautsav", "Events", "Sports", "Festivals"];
+// Fallback data in case API fails
+const fallbackCategories = ["Brahmautsav", "Events", "Sports", "Festivals"];
 
-const galleryData = {
+const fallbackGalleryData = {
     Brahmautsav: [
         { id: 1, image: "/images/festivals/shiv-show.jpg", caption: "Brahmautsav Cultural Fest 2025" },
         { id: 2, image: "/images/festivals/dance.jpg", caption: "Annual Day Celebration" },
@@ -18,10 +20,10 @@ const galleryData = {
         { id: 4, image: "/images/events/fourth.png", caption: "Industry Expert Interaction Session" },
     ],
     Sports: [
-        // { id: 1, image: "/images/gallery/sports1.jpg", caption: "Inter-College Cricket Tournament" },
-        // { id: 2, image: "/images/gallery/sports2.jpg", caption: "Annual Sports Meet 2025" },
-        // { id: 3, image: "/images/gallery/sports3.jpg", caption: "Basketball Championship" },
-        // { id: 4, image: "/images/gallery/sports4.jpg", caption: "Athletics Day" },
+        { id: 1, image: "/facilities/image1.png", caption: "Sports Complex - Indoor Facilities" },
+        { id: 2, image: "/facilities/image2.jpg", caption: "Athletic Track and Field" },
+        { id: 3, image: "/facilities/image3.png", caption: "Basketball Court" },
+        { id: 4, image: "/facilities/image4.png", caption: "Swimming Pool Complex" },
     ],
     Festivals: [
         { id: 1, image: "/images/festivals/shiv-show.jpg", caption: "Shiv Utsav Celebration" },
@@ -117,7 +119,74 @@ function Lightbox({ images, activeIndex, onClose, onPrev, onNext, category }) {
 export default function GallerySection() {
     const [activeCategory, setActiveCategory] = useState("Events");
     const [lightboxIndex, setLightboxIndex] = useState(null);
-    const images = galleryData[activeCategory];
+    const [categories, setCategories] = useState([]);
+    const [galleryData, setGalleryData] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Load categories and initial gallery data
+    useEffect(() => {
+        const loadGalleryData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                // Load categories
+                const categoriesData = await fetchGalleryCategories();
+                const categoryNames = categoriesData.map(cat => cat.name);
+                setCategories(categoryNames);
+
+                // Load images for each category
+                const galleryDataMap = {};
+                for (const category of categoriesData) {
+                    try {
+                        const images = await fetchGalleryImages(category.slug);
+                        console.log(`🖼️ Raw images for ${category.name}:`, images);
+                        
+                        // Transform API data to match component structure
+                        galleryDataMap[category.name] = images.map((img, index) => {
+                            console.log(`🖼️ Raw Image ${index + 1} for ${category.name}:`, img);
+                            const transformedImg = {
+                                id: img.id,
+                                image: img.image_path, // Map image_path to image
+                                caption: img.caption || `${category.name} Image ${index + 1}` // Use caption directly
+                            };
+                            console.log(`🔗 Final Image ${index + 1} URL for ${category.name}:`, transformedImg.image);
+                            console.log(`📝 Image ${index + 1} caption for ${category.name}:`, transformedImg.caption);
+                            return transformedImg;
+                        });
+                        
+                        console.log(`✅ Transformed images for ${category.name}:`, galleryDataMap[category.name]);
+                    } catch (imgError) {
+                        console.error(`Failed to load images for ${category.name}:`, imgError);
+                        // Use fallback data for this category
+                        galleryDataMap[category.name] = fallbackGalleryData[category.name] || [];
+                    }
+                }
+
+                setGalleryData(galleryDataMap);
+                console.log('✅ Gallery data loaded from database:', Object.keys(galleryDataMap).length, 'categories');
+
+                // Set default active category if current one doesn't exist
+                if (!categoryNames.includes(activeCategory)) {
+                    setActiveCategory(categoryNames[0] || "Events");
+                }
+            } catch (err) {
+                console.error('❌ Failed to load gallery data:', err);
+                setError(err.message);
+                // Use fallback data
+                setCategories(fallbackCategories);
+                setGalleryData(fallbackGalleryData);
+                console.log('🔄 Using fallback gallery data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadGalleryData();
+    }, []);
+
+    const images = galleryData[activeCategory] || [];
 
     const openLightbox = (i) => setLightboxIndex(i);
     const closeLightbox = () => setLightboxIndex(null);
@@ -162,18 +231,25 @@ export default function GallerySection() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.15 }}
                 >
-                    {categories.map((cat) => (
-                        <button
-                            key={cat}
-                            onClick={() => setActiveCategory(cat)}
-                            className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-250 ${activeCategory === cat
-                                ? "bg-orange-500 text-white shadow-md shadow-orange-200"
-                                : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300 hover:text-orange-500"
-                                }`}
-                        >
-                            {cat}
-                        </button>
-                    ))}
+                    {loading ? (
+                        // Loading skeleton
+                        Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="h-10 w-24 bg-gray-200 rounded-full animate-pulse" />
+                        ))
+                    ) : (
+                        categories.map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-250 ${activeCategory === cat
+                                    ? "bg-orange-500 text-white shadow-md shadow-orange-200"
+                                    : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300 hover:text-orange-500"
+                                    }`}
+                            >
+                                {cat}
+                            </button>
+                        ))
+                    )}
                 </motion.div>
 
                 {/* Image Grid */}
@@ -186,39 +262,70 @@ export default function GallerySection() {
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.35 }}
                     >
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {images.map((item, i) => (
-                                <motion.div
-                                    key={item.id}
-                                    className="relative rounded-xl overflow-hidden cursor-pointer group aspect-[4/3]"
-                                    initial={{ opacity: 0, scale: 0.96 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: i * 0.07, duration: 0.4 }}
-                                    onClick={() => openLightbox(i)}
-                                    whileHover={{ scale: 1.02 }}
-                                >
-                                    <img
-                                        src={item.image}
-                                        alt={item.caption}
-                                        loading="lazy"
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
-                                        onError={(e) => { e.target.src = fallbacks[activeCategory][i]; }}
-                                    />
-                                    {/* Hover overlay */}
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/45 transition-all duration-300 flex items-end">
-                                        <div className="p-3 translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                                            <p className="text-white text-xs font-medium leading-snug">{item.caption}</p>
+                        {loading ? (
+                            // Loading skeleton
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={i} className="aspect-[4/3] bg-gray-200 rounded-xl animate-pulse" />
+                                ))}
+                            </div>
+                        ) : images.length === 0 ? (
+                            <div className="text-center py-12">
+                                <p className="text-gray-500 text-sm">No images available for {activeCategory}</p>
+                                {error && (
+                                    <p className="text-red-500 text-xs mt-2">Error: {error}</p>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {images.map((item, i) => (
+                                    <motion.div
+                                        key={item.id}
+                                        className="relative rounded-xl overflow-hidden cursor-pointer group aspect-[4/3]"
+                                        initial={{ opacity: 0, scale: 0.96 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: i * 0.07, duration: 0.4 }}
+                                        onClick={() => openLightbox(i)}
+                                        whileHover={{ scale: 1.02 }}
+                                    >
+                                        <img
+                                            src={item.image}
+                                            alt={item.caption}
+                                            loading="lazy"
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
+                                            onLoad={(e) => {
+                                                console.log(`✅ Gallery image loaded successfully:`, e.target.src);
+                                            }}
+                                            onError={(e) => { 
+                                                console.error(`❌ Gallery image failed to load:`, e.target.src);
+                                                // Fallback to original hardcoded images
+                                                const fallbackImages = fallbacks[activeCategory];
+                                                if (fallbackImages && fallbackImages[i]) {
+                                                    console.log(`🔄 Trying fallback image:`, fallbackImages[i]);
+                                                    e.target.src = fallbackImages[i];
+                                                } else {
+                                                    // Use generic fallback
+                                                    console.log(`🔄 Using generic fallback image`);
+                                                    e.target.src = '/fallback-image.jpg';
+                                                }
+                                            }}
+                                        />
+                                        {/* Hover overlay */}
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/45 transition-all duration-300 flex items-end">
+                                            <div className="p-3 translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                                                <p className="text-white text-xs font-medium leading-snug">{item.caption}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    {/* Zoom icon */}
-                                    <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/0 group-hover:bg-white/90 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
-                                        <svg className="w-3.5 h-3.5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                                        </svg>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
+                                        {/* Zoom icon */}
+                                        <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/0 group-hover:bg-white/90 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
+                                            <svg className="w-3.5 h-3.5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                            </svg>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* View More */}
                         <div className="flex justify-center mt-8">

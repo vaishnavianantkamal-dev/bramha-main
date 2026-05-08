@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import { submitContactForm } from "../../../services/api.js";
 
 const contactInfo = [
     {
@@ -41,15 +42,41 @@ export default function ContactSection() {
 
     const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Mock submit
-        setSubmitted(true);
-        setTimeout(() => setSubmitted(false), 3500);
-        setForm({ name: "", email: "", subject: "", message: "" });
+        
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // Submit to backend API
+            const response = await submitContactForm(form);
+            
+            console.log('✅ Contact form submitted successfully:', response);
+            
+            // Show success message
+            setSubmitted(true);
+            
+            // Reset form
+            setForm({ name: "", email: "", subject: "", message: "" });
+            
+            // Hide success message after 5 seconds
+            setTimeout(() => setSubmitted(false), 5000);
+            
+        } catch (err) {
+            console.error('❌ Failed to submit contact form:', err);
+            setError(err.message || 'Failed to send message. Please try again.');
+            
+            // Hide error after 5 seconds
+            setTimeout(() => setError(null), 5000);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -140,6 +167,26 @@ export default function ContactSection() {
                                 <h3 className="text-gray-900 font-bold text-lg mb-1">Message Sent!</h3>
                                 <p className="text-gray-500 text-sm">We'll get back to you within 24 hours.</p>
                             </motion.div>
+                        ) : error ? (
+                            <motion.div
+                                className="flex flex-col items-center justify-center h-64 text-center"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                            >
+                                <div className="w-16 h-16 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mb-4">
+                                    <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-gray-900 font-bold text-lg mb-1">Submission Failed</h3>
+                                <p className="text-gray-500 text-sm">{error}</p>
+                                <button
+                                    onClick={() => setError(null)}
+                                    className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-full text-sm hover:bg-orange-600 transition-colors"
+                                >
+                                    Try Again
+                                </button>
+                            </motion.div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid sm:grid-cols-2 gap-4">
@@ -206,14 +253,31 @@ export default function ContactSection() {
                                 <div className="flex justify-end pt-1">
                                     <motion.button
                                         type="submit"
-                                        className="px-8 py-3 bg-orange-500 text-white rounded-full font-semibold text-sm hover:bg-orange-600 transition-colors duration-250 flex items-center gap-2"
-                                        whileHover={{ scale: 1.03 }}
-                                        whileTap={{ scale: 0.97 }}
+                                        disabled={loading}
+                                        className={`px-8 py-3 rounded-full font-semibold text-sm flex items-center gap-2 transition-colors duration-250 ${
+                                            loading 
+                                                ? 'bg-gray-400 cursor-not-allowed' 
+                                                : 'bg-orange-500 hover:bg-orange-600 text-white'
+                                        }`}
+                                        whileHover={loading ? {} : { scale: 1.03 }}
+                                        whileTap={loading ? {} : { scale: 0.97 }}
                                     >
-                                        Send Message
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                        </svg>
+                                        {loading ? (
+                                            <>
+                                                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Send Message
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                                </svg>
+                                            </>
+                                        )}
                                     </motion.button>
                                 </div>
                             </form>

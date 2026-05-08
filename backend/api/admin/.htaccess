@@ -1,0 +1,5 @@
+# Admin API - PHP settings
+php_flag display_errors off
+php_flag log_errors on
+php_value error_reporting 32767
+AddDefaultCharset UTF-8
