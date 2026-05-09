@@ -52,5 +52,5 @@ RUN chmod -R 775 writable
 # Expose port (Railway will override this with $PORT)
 EXPOSE 8080
 
-# Start CodeIgniter using spark serve (using shell form to resolve $PORT)
-CMD php spark serve --host 0.0.0.0 --port $PORT
+# Start PHP server pointing to the public directory
+CMD php -S 0.0.0.0:$PORT -t public
