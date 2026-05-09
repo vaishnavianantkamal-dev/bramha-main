@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
-    gnupg
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install mysqli intl gd zip
@@ -44,13 +45,19 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
+# Fix Apache port for Railway
+RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
+
 # Set permissions for CI4
 RUN mkdir -p writable/cache writable/logs writable/session writable/debugbar
 RUN chown -R www-data:www-data writable
 RUN chmod -R 775 writable
 
+# Ensure public/dist exists (prevent errors if build failed but didn't stop)
+RUN mkdir -p public/dist
+
 # Expose port (Railway will override this with $PORT)
 EXPOSE 8080
 
-# Start PHP server pointing to the public directory
-CMD php -S 0.0.0.0:$PORT -t public
+# Start Apache
+CMD ["apache2-foreground"]
