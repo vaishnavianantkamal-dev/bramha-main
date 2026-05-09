@@ -15,10 +15,7 @@ class Home extends BaseController
     public function index()
     {
         $filePath = FCPATH . 'dist/index.html';
-        if (file_exists($filePath)) {
-            return file_get_contents($filePath);
-        }
-        return "Frontend build not found. Please run 'npm run build'.";
+        return "Antigravity is testing: " . (file_exists($filePath) ? "Dist folder found" : "Dist folder missing at: " . $filePath);
     }
 
     /**
