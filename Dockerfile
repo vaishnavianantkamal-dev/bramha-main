@@ -25,6 +25,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 # Set working directory
 WORKDIR /var/www/html
 
+# Allow Composer to run as root
+ENV COMPOSER_ALLOW_SUPERUSER 1
+
 # Copy project files
 COPY . .
 
