@@ -57,3 +57,5 @@ $routes->group('api/admin/dashboard', ['filter' => 'adminAuth'], function($route
     $routes->post('hero-slides/save', 'Admin\Dashboard::saveHeroSlide');
     $routes->delete('hero-slides/delete/(:num)', 'Admin\Dashboard::deleteHeroSlide/$1');
 });
+$routes->set404Override('Home::index');
+$routes->get('(:any)', 'Home::index');
