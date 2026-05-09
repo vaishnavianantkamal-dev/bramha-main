@@ -15,7 +15,7 @@ class Home extends BaseController
     public function index()
     {
         $filePath = FCPATH . 'dist/index.html';
-        return "Antigravity is testing: " . (file_exists($filePath) ? "Dist folder found" : "Dist folder missing at: " . $filePath);
+        return "Brahma Valley LIVE - Version 1.1 - Checked at: " . date('Y-m-d H:i:s');
     }
 
     /**
