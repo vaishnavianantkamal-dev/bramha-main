@@ -1,5 +1,6 @@
 [phases.setup]
 nixPkgs = ["php82", "php82Packages.composer", "nodejs-18_x"]
+aptPkgs = ["libicu-dev", "libpng-dev", "libzip-dev", "zip", "unzip"]
 
 [phases.install]
 dependsOn = ["setup"]
@@ -10,7 +11,9 @@ cmds = [
 
 [phases.build]
 dependsOn = ["install"]
-cmds = ["npm run build"]
+cmds = [
+    "npm run build"
+]
 
 [start]
 cmd = "php spark serve --host=0.0.0.0 --port=$PORT"
