@@ -1,8 +1,7 @@
 {
-    "name": "brahma/valley",
+    "name": "vaishnavi/bramhavalley",
     "type": "project",
-    "description": "The CodeIgniter4 framework v4.4.x",
-    "homepage": "https://codeigniter.com",
+    "description": "Bramha Valley Deployment",
     "license": "MIT",
     "require": {
         "php": "8.2.*",
