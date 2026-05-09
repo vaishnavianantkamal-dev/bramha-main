@@ -17,12 +17,6 @@
             "**/Database/Migrations/**"
         ]
     },
-    "scripts": {
-        "post-update-cmd": [
-            "CodeIgniter\\ComposerScripts::postUpdate"
-        ],
-        "test": "phpunit"
-    },
     "support": {
         "forum": "http://forum.codeigniter.com/",
         "source": "https://github.com/codeigniter4/CodeIgniter4",
