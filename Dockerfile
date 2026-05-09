@@ -45,7 +45,9 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Set permissions for CI4
+RUN mkdir -p writable/cache writable/logs writable/session writable/debugbar
 RUN chown -R www-data:www-data writable
+RUN chmod -R 775 writable
 
 # Expose port 80
 EXPOSE 80
