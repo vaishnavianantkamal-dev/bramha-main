@@ -1,4 +1,4 @@
-# Use PHP 8.2 with Apache
+# Use PHP 8.2 (CLI version is enough for php -S, but we can keep apache image and just not use it)
 FROM php:8.2-apache
 
 # Install system dependencies
@@ -15,9 +15,6 @@ RUN apt-get update && apt-get install -y \
 
 # Install PHP extensions
 RUN docker-php-ext-install mysqli intl gd zip
-
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
 
 # Install Node.js (for building the frontend)
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
@@ -40,24 +37,20 @@ RUN composer install --no-dev --ignore-platform-reqs --no-scripts
 RUN npm install
 RUN npm run build
 
-# Configure Apache Document Root to /public
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
-
-# Fix Apache port for Railway
-RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
-
 # Set permissions for CI4
 RUN mkdir -p writable/cache writable/logs writable/session writable/debugbar
 RUN chown -R www-data:www-data writable
 RUN chmod -R 775 writable
 
-# Ensure public/dist exists (prevent errors if build failed but didn't stop)
+# Ensure public/dist exists
 RUN mkdir -p public/dist
 
-# Expose port (Railway will override this with $PORT)
+# Expose port
 EXPOSE 8080
 
-# Start Apache
-CMD ["apache2-foreground"]
+# Start PHP built-in server
+# We use -t public to set the document root.
+# We don't use a router script because CI4's index.php handles routing 
+# and php -S naturally serves index.php for the root and missing files in the root.
+# For nested routes, CI4's index.php will need to be hit.
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT} -t public"]
