@@ -49,8 +49,8 @@ RUN mkdir -p writable/cache writable/logs writable/session writable/debugbar
 RUN chown -R www-data:www-data writable
 RUN chmod -R 775 writable
 
-# Expose port 80
-EXPOSE 80
+# Expose port (Railway will override this with $PORT)
+EXPOSE 8080
 
-# Start Apache
-CMD ["apache2-foreground"]
+# Start CodeIgniter using spark serve (using shell form to resolve $PORT)
+CMD php spark serve --host 0.0.0.0 --port $PORT
