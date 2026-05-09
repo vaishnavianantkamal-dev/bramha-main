@@ -1,4 +1,5 @@
 <?php
+echo "CI4 Index is running!";
 
 // Check PHP version.
 if (version_compare(PHP_VERSION, '7.4', '<')) {
